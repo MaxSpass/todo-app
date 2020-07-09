@@ -99,13 +99,12 @@ export default (state = initialState, {type, payload}) => {
             };
             break;
         case TODO_FETCH_SUCCESS:
-            const todosMapped = payload.map(el=>{
-                el.select = false;
-                return el;
-            });
             state = {
                 ...state,
-                todos: [...state.todos, ...todosMapped],
+                todos: payload.map(el=>{
+                    el.select = false;
+                    return el;
+                }),
             };
             break;
         case TODO_FETCH_ERROR:
@@ -115,50 +114,27 @@ export default (state = initialState, {type, payload}) => {
             };
             break;
         case TODO_ADD:
-            const newTodo = {
-                id: uniqueId(TODO_PREFIX),
-                task: payload,
-                status: 'active',
-            };
             state = {
               ...state,
-              todos: [...state.todos, newTodo]
+              todos: state.todos.concat([{
+                      id: uniqueId(TODO_PREFIX),
+                      status: 'open',
+                      task: payload,
+                      selected: false,
+                  }])
             };
             break;
         case TODO_REMOVE:
-            //@TODO Should implement, REFACTOR Should
-            state.selected.forEach((value, id, map)=>{
-                console.log('id',id);
+            const ids = Array.from(state.selected.keys());
+            const newTodoArray = state.todos.filter(el=>{
+                return ids.some(id=>id!==el.id);
             });
-            //payload: string[]
-            // console.log('TODO_REMOVE');
-            // let newArray = cloneDeep(state.todos);
-            //
-            // let ids = [];
-            //
-            // if(state.selected.length) {
-            //     state.selected.forEach((value, id, map)=>{
-            //         console.log(id);
-            //         ids.push(id);
-            //         const deletedIndex = state.todos.findIndex(el=>el.id===id);
-            //         console.log('deletedIndex',deletedIndex);
-            //         newArray = cloneDeep(state.todos).splice(deletedIndex, 1);
-            //     });
-            // }
-            //
-            // newArray.forEach(el=>{
-            //     if(ids.some(id=>el.id===id)) {
-            //         newArray.splice()
-            //     }
-            // });
-            //
-            // console.log('newArray',newArray);
-            //
-            // state = {
-            //    todos: [
-            //        ...newArray
-            //    ]
-            // };
+
+            state = {
+                ...state,
+                todos: newTodoArray,
+                selected: new Map(),
+            };
 
             break;
         case TODO_TOGGLE:
@@ -199,6 +175,6 @@ export default (state = initialState, {type, payload}) => {
         default:
             break;
     }
-    console.log(state.selected);
+    // console.log(state.selected);
     return state;
 };

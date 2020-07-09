@@ -11,6 +11,9 @@ import {
     todoAddThunk,
     todoRemoveThunk,
 } from "./store/reducers/todo/todo.reducer";
+import {
+    get,
+} from 'lodash';
 
 function App(props) {
     //@TODO ???
@@ -75,7 +78,7 @@ function App(props) {
             <Button variant="contained" color="secondary" onClick={onClear}>
                 Clear
             </Button>
-            <Button variant="contained" disabled={props.selectedSize} onClick={onRemove}>
+            <Button variant="contained" disabled={!props.hasSelected} onClick={onRemove}>
                 Remove
             </Button>
             <TodoList
@@ -90,7 +93,7 @@ function App(props) {
 const mapStateToProps = state => {
     return {
         todos: state.todo.todos,
-        // selectedSize: state.todo.selected.size(),
+        hasSelected: get(state, 'todo.selected.size', false),
     }
 };
 
