@@ -125,9 +125,9 @@ export default (state = initialState, {type, payload}) => {
             };
             break;
         case TODO_REMOVE:
-            const ids = Array.from(state.selected.keys());
+            const selectedIds = Array.from(state.selected.keys());
             const newTodoArray = state.todos.filter(el=>{
-                return ids.some(id=>id!==el.id);
+                return selectedIds.indexOf(el.id) === -1;
             });
 
             state = {
@@ -152,7 +152,7 @@ export default (state = initialState, {type, payload}) => {
             }
 
             state = {
-                ...cloneDeep(state),
+                ...state,
             };
             break;
         case TODO_UPDATE:
