@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import 'bootstrap-css-only';
 import './index.css';
 import {composeWithDevTools} from 'redux-devtools-extension'
 import {createStore, applyMiddleware} from 'redux';

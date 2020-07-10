@@ -4,7 +4,7 @@ import List from '@material-ui/core/List';
 
 function TodoList(props) {
     return(
-        <List dense component="ul" role="list">
+        <List component="ul" role="list">
             {
                 props.todos.length &&
                 props.todos.map(el=><TodoItem

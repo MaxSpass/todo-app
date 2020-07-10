@@ -4,7 +4,6 @@ import {
     TODO_FETCH_ERROR,
     TODO_ADD,
     TODO_REMOVE,
-    TODO_TOGGLE,
     TODO_UPDATE,
     TODO_PREFIX,
 } from '../../../constants/todo/index';
@@ -18,7 +17,6 @@ import {
 
 const INITIAL_STATE = ()=>({
     todos: [],
-    selected: new Map(),
     isLoading: false,
     error: null,
 });
@@ -37,11 +35,6 @@ const todoFetchSuccessAC = payload => ({
 
 const todoFetchErrorAC = payload => ({
     type: TODO_FETCH_ERROR,
-    payload,
-});
-
-const todoSelectAC = payload => ({
-    type: TODO_TOGGLE,
     payload,
 });
 
@@ -74,10 +67,6 @@ export const fetchTodosThunk = () => dispatch => {
         })
 };
 
-export const todoSelectThunk = payload => dispatch => {
-    dispatch(todoSelectAC(payload))
-};
-
 export const todoUpdateThunk = payload => dispatch => {
     dispatch(todoUpdateAC(payload))
 };
@@ -91,6 +80,7 @@ export const todoRemoveThunk = payload => dispatch => {
 };
 
 export default (state = initialState, {type, payload}) => {
+    console.log(`ACTION: ${type}`, payload);
     switch(type) {
         case TODO_FETCH_START:
             state = {
@@ -101,10 +91,7 @@ export default (state = initialState, {type, payload}) => {
         case TODO_FETCH_SUCCESS:
             state = {
                 ...state,
-                todos: payload.map(el=>{
-                    el.select = false;
-                    return el;
-                }),
+                todos: payload,
             };
             break;
         case TODO_FETCH_ERROR:
@@ -117,60 +104,42 @@ export default (state = initialState, {type, payload}) => {
             state = {
               ...state,
               todos: state.todos.concat([{
-                      id: uniqueId(TODO_PREFIX),
-                      status: 'open',
-                      task: payload,
-                      selected: false,
-                  }])
+                id: uniqueId(TODO_PREFIX),
+                status: 'open',
+                task: payload,
+                created: Date.now()
+              }])
             };
             break;
         case TODO_REMOVE:
-            const selectedIds = Array.from(state.selected.keys());
+            console.log(payload)
             const newTodoArray = state.todos.filter(el=>{
-                return selectedIds.indexOf(el.id) === -1;
+                return payload.indexOf(el.id) === -1;
             });
 
             state = {
                 ...state,
                 todos: newTodoArray,
-                selected: new Map(),
             };
 
-            break;
-        case TODO_TOGGLE:
-            console.log('TODO_TOGGLE', payload);
-            const {id: taskId, value: checked} = payload;
-            // payload: object<id, value>,
-
-            if(checked) {
-                const selectedTodo = cloneDeep(state.todos.find(el=>el.id===taskId));
-                if(state.selected) {
-                    state.selected.set(taskId, selectedTodo);
-                }
-            } else if(state.selected.has(taskId)) {
-                state.selected.delete(taskId);
-            }
-
-            state = {
-                ...state,
-            };
             break;
         case TODO_UPDATE:
-            console.log('TODO_UPDATE', payload);
-            const {id, value} = payload;
-            const updatedTodos = state.todos.map(el=>{
-                if(el=>el.id === id) {
-                    el.task = value;
+            {
+                const {id, value, status} = payload;
+                const updatedIndex = state.todos.findIndex(el=>el.id===id);
+                const findedTodo = cloneDeep(state.todos[updatedIndex]);
+                if(findedTodo) {
+                    findedTodo.task = value;
+                    findedTodo.status = status;
+                    state.todos[updatedIndex] = findedTodo;
                 }
-                return el;
-            });
-
-            state = {
-                ...state,
-                todos: [
-                    ...updatedTodos,
-                ]
-            };
+                state = {
+                    ...state,
+                    todos: [
+                        ...state.todos,
+                    ]
+                };
+            }
             break;
         default:
             break;

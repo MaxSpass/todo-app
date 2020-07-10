@@ -5,25 +5,57 @@ import ListItem from "@material-ui/core/ListItem";
 import TextField from '@material-ui/core/TextField';
 import CheckIcon from '@material-ui/icons/Check';
 import CloseIcon from '@material-ui/icons/Close';
+import Chip from '@material-ui/core/Chip';
+
+import {
+    TODO_STATUS_OPEN,
+    TODO_STATUS_DONE,
+} from '../../constants/todo';
+
+const getBadgeColor = (value = '') => {
+    const status = value.toLowerCase();
+
+    return status === TODO_STATUS_DONE
+        ? "primary"
+        : status === TODO_STATUS_OPEN
+        ? "secondary"
+        : "error";
+};
+
+const getStatus = (selected) => {
+    return selected
+        ? TODO_STATUS_DONE
+        : TODO_STATUS_OPEN;
+};
 
 function TodoItem(props) {
-    const [todo, setTodo] = React.useState(props.todo);
+    const [todo] = React.useState(props.todo);
     const [editable, setEditable] = React.useState(false);
-    const [value,setValue] = React.useState(props.todo.task);
-    const [valueTemp,setTempValue] = React.useState(props.todo.task);
+    const [value,setValue] = React.useState(todo.task);
+    const [valueTemp,setTempValue] = React.useState(todo.task);
+    const [status, setStatus] = React.useState(todo.status);
+    const [isDone, setIsDone] = React.useState(status === TODO_STATUS_DONE);
 
     React.useEffect(()=>{
         if(props.todo.task !== value) {
-            props.update(id, value);
+            props.update(id, value, status);
         }
     }, [value]);
+
+
+    React.useEffect(()=>{
+        setStatus(getStatus(isDone));
+        setIsDone(status === TODO_STATUS_DONE);
+    }, [props]);
 
     function changeInputTempValue(e) {
         setTempValue(e.target.value)
     }
 
     function toggleEditStatus(saveFlag) {
-        return function() {
+        if(isDone) return;
+
+        return () => {
             setEditable(!editable);
             if(saveFlag) {
                 setValue(valueTemp);
@@ -34,41 +66,54 @@ function TodoItem(props) {
     };
 
     function selectTodo(e) {
-        props.select(id)(e);
+        const status = getStatus(e.target.checked);
+        setIsDone(e.target.checked);
+        setStatus(status);
+        props.update(id, value, status);
+        props.select(id, e.target.checked);
     }
 
-    const {id, selected} = todo;
+    const {id} = todo;
 
     return (
-        <ListItem key={id} role="listitem" button>
+        <ListItem key={id} role="listitem" component="li" button>
             {
                 editable
-                    ? <ListItem>
+                    ? <React.Fragment>
                         <TextField
-                            id="time"
                             type="text"
                             value={valueTemp}
                             onChange={changeInputTempValue}
                         />
-                        <CheckIcon onClick={toggleEditStatus(true)} />
-                        <CloseIcon onClick={toggleEditStatus(false)} />
-                    </ListItem>
-                    : <ListItem>
-                            <Checkbox
-                                onChange={selectTodo}
-                                checked={selected}
-                                tabIndex={-1}
-                                disableRipple
-                                inputProps={{ 'aria-labelledby': id }}
+                        <div className="ml-auto">
+                            <CheckIcon className="ml-2" onClick={toggleEditStatus(true)} />
+                            <CloseIcon className="ml-2" onClick={toggleEditStatus(false)} />
+                        </div>
+                    </React.Fragment>
+                    : <React.Fragment>
+                        <Checkbox
+                            onChange={selectTodo}
+                            checked={isDone}
+                            tabIndex={-1}
+                            disableRipple
+                            color="primary"
+                            inputProps={{ 'aria-labelledby': id }}
+                        />
+                        <ListItemText
+                            onClick={toggleEditStatus(false)}
+                            id={id}
+                        >{isDone ? <del>{value}</del> : <b>{value}</b>}
+                        </ListItemText>
+                        <div className="ml-auto">
+                            <Chip
+                                label={status}
+                                color={getBadgeColor(status)}
+                                size="small"
                             />
-                            <ListItemText
-                                onClick={toggleEditStatus(false)}
-                                id={id}
-                                primary={value}
-                            />
-                    </ListItem>
-
+                        </div>
+                    </React.Fragment>
             }
+
         </ListItem>
     )
 
